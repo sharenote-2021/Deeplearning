@@ -1,10 +1,11 @@
+import os
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from pandas import Series, DataFrame
 
 from tools.preprocess import *
 from model.Word2vec import *
-
+from db_connect import connect_db
 
 # 플라스크 서버의 결과 값 내뱉는 함수가 될 것
 
@@ -47,7 +48,7 @@ def main(data, news_title):
 
 
     indices = [i for i in range(len(news_title))]
-
+    print(len(indices))
     tmp = []
 
     save_data = {"기준뉴스문장" : [], "임계치문장" : [], "코사인유사도":[], "클러스터갯수": []}
@@ -74,11 +75,11 @@ def main(data, news_title):
             
 
     df = DataFrame(save_data)
-    print(df.shape)
-    print(df.columns)
-    # df.sort_index(axis = '코사인유사도')
-    df = df.sort_values(by=['코사인유사도'])
-    df.to_csv('.output/%s_result_%d_except.csv'%(threshold, except_count), sep=',', na_rep='NaN')
+    df = df.sort_values(by=['클러스터갯수'],ascending=False)
+    df = df.drop_duplicates(['기준뉴스문장'])
+    df = df.drop_duplicates(['코사인유사도'])
+
+    df.to_csv('./output/%s_result_%d_except.csv'%(threshold, except_count), sep=',', na_rep='NaN')
 
     print("전체 데이터 갯수 : %d, 임계치 이하 데이터 갯수 : %d"%(len(news_title), except_count))
 
@@ -88,8 +89,13 @@ if __name__ == "__main__":
     # data_path = "csv file path"
     # df = pd.read_csv(data_path)
 
-    df = pd.read_csv("./category.csv")
-    news_title = df["title"]
+    if os.path.exists('./db_connect.p'):
+        df = connect_db()
+        print(df)
+        news_title = df['topic_news_title']
+    else:
+        df = pd.read_csv("./category.csv")
+        news_title = df["title"]
     print("total data length is %d\n"%len(news_title))
 
 

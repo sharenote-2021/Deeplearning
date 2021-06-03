@@ -6,7 +6,6 @@ def word2vec(cluster_data):
     # check embedding result
     word_vector = model.wv
 
-
     sentence_vectors = []
     for sent in cluster_data:
         sent_vector = [0]*100
